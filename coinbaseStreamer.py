@@ -1,41 +1,56 @@
 import websocket
 import json
 
-def onMessage(ws, message):
-    print(message)
-
-def onError(ws, error):
-    print(error)
+class coinbaseStreamer:
+    def __init__(self, symbol, asset):
+        self.asset = asset
+        self.symbol = symbol
+        self.addr = f'wss://ws-feed.exchange.coinbase.com'
+        self.sock = websocket.WebSocket()
+        self.sock.connect(self.addr)
+        self.subscribed = False
+        self.symbols = set()
     
-def onClose(message):
-    print(message)
-    
-def streamCoinbase(symbol):
-    addr = f'wss://ws-feed.exchange.coinbase.com'
-    # ws = websocket.WebSocketApp(addr,
-    #                     on_message=onMessage,
-    #                     on_error=onError,
-    #                     on_close=onClose)
-    ws = websocket.WebSocket()
-    ws.connect(addr)
-    print(ws.getstatus())
-    sub = {
-        "type": "subscribe",
-        "channels": [
-            {
-                "name": "ticker",
-                "product_ids": [
-                    "BTC-USD"
+    def subscribe(self, symbol):
+        if symbol in self.symbols:
+            return
+        
+        self.symbols.add(symbol)
+        
+        if self.subscribed:
+            # unsubscribe
+            unsub = {
+                "type": "unsubscribe",
+                "channels": [
+                    {
+                        "name": "ticker"
+                    }
                 ]
             }
-        ]
-    }
-    msg=json.dumps(sub)
-    ws.send(msg)
-    quote = ws.recv()
-    while quote:
-        print(quote)
-        quote=ws.recv()
-    # ws.run_forever()
+            msg=json.dumps(sub)
+            self.sock.send(msg)
+            
+        sub = {
+            "type": "subscribe",
+            "channels": [
+                {
+                    "name": "ticker",
+                    "product_ids": []
+                }
+            ]
+        }
+        
+        print (sub)
+        
+        for s in self.symbols:
+            sub['channels'][0]['product_ids'].append(s)
+        
+        msg=json.dumps(sub)
+        print(msg)
+        self.sock.send(msg)
     
-streamCoinbase('BTC-USD')
+    def streamCoinbase(self):
+        quote = self.sock.recv()
+        while quote:
+            print(quote)
+            quote=self.sock.recv()

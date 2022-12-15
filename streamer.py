@@ -13,7 +13,7 @@ class streamer:
                             on_close=self.onClose)
         
     def onMessage(self, ws, message):
-        print(message)
+        # print(message)
         msgDict = json.loads(message)
         self.asset.bestBid = msgDict["b"]
         self.asset.bidSize = msgDict["B"]
@@ -27,8 +27,4 @@ class streamer:
         print(message)
         print(parm1)
         print(parm2)
-
-    def run(self):
-        self.sock.run_forever()
-        print ("socket started")
     
