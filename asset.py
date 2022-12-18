@@ -3,10 +3,10 @@ class exchAsset:
         self.exchange = exchange
         self.ticker = ticker
         self.name = name
-        self.bestBid = 0
-        self.bidSize = 0
-        self.bestOffer = 0
-        self.offerSize = 0
+        self.bestBid = float(0)
+        self.bidSize = float(0)
+        self.bestOffer = float(0)
+        self.offerSize = float(0)
         
     def updateTop(self, bb, bs, bo, os):
         self.bestBid = bb

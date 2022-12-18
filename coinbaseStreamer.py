@@ -52,5 +52,5 @@ class coinbaseStreamer:
     def streamCoinbase(self):
         quote = self.sock.recv()
         while quote:
-            print(quote)
+            # print(quote)
             quote=self.sock.recv()
