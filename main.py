@@ -42,12 +42,12 @@ def int_addAsset(exch: str, asset: str):
             binanceAssets[key] = a
             if coinbaseStream is None:
                 coinbaseStream = coinbaseStreamer(asset, a)
-                coinbaseStream.subscribe(asset)
+                coinbaseStream.subscribe(asset, a)
                 t = threading.Thread(target=coinbaseStream.streamCoinbase)
                 t.daemon = True
                 t.start()
             else: 
-                coinbaseStream.subscribe(asset)
+                coinbaseStream.subscribe(asset, a)
     print(exch, asset)   
     
 @app.route("/latestPrice/<exch>/<asset>")
@@ -88,17 +88,23 @@ def ext_registerSynthLeg(userId: int, synthDescr: str, exch: str, asset: str, we
     
     if synthDescr in synthAssets:
         synthAssets[synthDescr].addLeg(binanceAssets[key], float(weight))
+        binanceAssets[key].addSynth(synthAssets[synthDescr])
     
     return jsonify({})
 
 @app.route("/getLatestSynthPrice/<userId>/<descr>")
 def ext_getLatestSynthPrice(userId: int, descr: str):
     if descr in synthAssets:
-        print (synthAssets[descr].getPrice("SELL"))
+        # res = {
+        #     "bestBid" : synthAssets[descr].getPrice("SELL"),
+        #     "bidSize" : 0,
+        #     "bestOffer" : synthAssets[descr].getPrice("BUY"),
+        #     "offerSize" : 0
+        # }
         res = {
-            "bestBid" : synthAssets[descr].getPrice("SELL"),
+            "bestBid" : synthAssets[descr].bestBid,
             "bidSize" : 0,
-            "bestOffer" : synthAssets[descr].getPrice("BUY"),
+            "bestOffer" : synthAssets[descr].bestOffer,
             "offerSize" : 0
         }
         print(res)
@@ -106,6 +112,10 @@ def ext_getLatestSynthPrice(userId: int, descr: str):
     else:
         return jsonify({})
 
+@app.route("/registerStrategy/<userId>/<synthAsset>/<target>/<condition>/<value>/<action>/<maxExposure>/<maxTrade>/<timeDelay>", methods=["POST"])
+def ext_registerStrategy(synthAsset: str, target: str, condition: str, value: str, action: str, maxExposure: float, maxTrade: float, timeDelay: int):
+    
+    
 def main():
     pass
 

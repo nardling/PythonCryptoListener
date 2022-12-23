@@ -9,13 +9,13 @@ class coinbaseStreamer:
         self.sock = websocket.WebSocket()
         self.sock.connect(self.addr)
         self.subscribed = False
-        self.symbols = set()
+        self.symbols = {}
     
-    def subscribe(self, symbol):
+    def subscribe(self, symbol, asset):
         if symbol in self.symbols:
             return
         
-        self.symbols.add(symbol)
+        self.symbols[symbol] = asset
         
         if self.subscribed:
             # unsubscribe
@@ -39,18 +39,20 @@ class coinbaseStreamer:
                 }
             ]
         }
-        
-        print (sub)
-        
+                
         for s in self.symbols:
             sub['channels'][0]['product_ids'].append(s)
         
         msg=json.dumps(sub)
-        print(msg)
         self.sock.send(msg)
     
     def streamCoinbase(self):
         quote = self.sock.recv()
         while quote:
-            # print(quote)
+            msgDict = json.loads(quote)
+            sym = msgDict.get('product_id')
+            if sym:
+                curAsset = self.symbols.get(sym)
+                curAsset.updateTop(msgDict['best_bid'], msgDict['best_bid_size'], msgDict['best_ask'], msgDict['best_ask_size'])
+                curAsset.updateSynths()
             quote=self.sock.recv()

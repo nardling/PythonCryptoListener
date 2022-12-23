@@ -1,7 +1,8 @@
 from asset import exchAsset
 
 class synthLeg:
-    def __init__(self, asset: exchAsset, weight: float):
+    def __init__(self, name: str, asset: exchAsset, weight: float):
+        self.name = name
         self.asset = asset
         self.weight = weight
     
@@ -21,12 +22,17 @@ class synthAsset:
     def __init__(self, assetName: str):
         self.name = assetName
         self.legs = []
+        self.bestBid = 0
+        self.bestOffer = 0
         
     def addLeg(self, asset: exchAsset, weight: float):
         s = synthLeg(asset, weight)
         self.legs.append(s)
-        
-    def getPrice(self, action:str):
-        print ("In getPrice")
+    
+    def calcPrice(self, action:str):
+        self.bestBid = self.calcPriceForAction("SELL")
+        self.bestOffer = self.calcPriceForAction("BUY")
+    
+    def calcPriceForAction(self, action:str):
         return sum(map(lambda s: s.contribution(action), self.legs))
         
