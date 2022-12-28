@@ -7,7 +7,7 @@ class exchAsset:
         self.bidSize = float(0)
         self.bestOffer = float(0)
         self.offerSize = float(0)
-        self.synthNames = {}
+        self.synthNames = set()
         self.synths = []
         
     def updateTop(self, bb, bs, bo, os):

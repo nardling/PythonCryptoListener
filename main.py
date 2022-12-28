@@ -82,12 +82,12 @@ def ext_registerSynthAsset(userId: int, descr: str):
     
 @app.route("/registerSynthLeg/<userId>/<synthDescr>/<exch>/<asset>/<weight>", methods=['POST'])
 def ext_registerSynthLeg(userId: int, synthDescr: str, exch: str, asset: str, weight: float):
-    key = exch + ":" + asset
+    key: str = exch + ":" + asset
     if key not in binanceAssets:
         int_addAsset(exch, asset)
     
     if synthDescr in synthAssets:
-        synthAssets[synthDescr].addLeg(binanceAssets[key], float(weight))
+        synthAssets[synthDescr].addLeg(key, binanceAssets[key], float(weight))
         binanceAssets[key].addSynth(synthAssets[synthDescr])
     
     return jsonify({})
@@ -112,8 +112,8 @@ def ext_getLatestSynthPrice(userId: int, descr: str):
     else:
         return jsonify({})
 
-@app.route("/registerStrategy/<userId>/<synthAsset>/<target>/<condition>/<value>/<action>/<maxExposure>/<maxTrade>/<timeDelay>", methods=["POST"])
-def ext_registerStrategy(synthAsset: str, target: str, condition: str, value: str, action: str, maxExposure: float, maxTrade: float, timeDelay: int):
+# @app.route("/registerStrategy/<userId>/<synthAsset>/<target>/<condition>/<value>/<action>/<maxExposure>/<maxTrade>/<timeDelay>", methods=["POST"])
+# def ext_registerStrategy(synthAsset: str, target: str, condition: str, value: str, action: str, maxExposure: float, maxTrade: float, timeDelay: int):
     
     
 def main():

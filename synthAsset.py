@@ -25,11 +25,11 @@ class synthAsset:
         self.bestBid = 0
         self.bestOffer = 0
         
-    def addLeg(self, asset: exchAsset, weight: float):
-        s = synthLeg(asset, weight)
+    def addLeg(self, name: str, asset: exchAsset, weight: float):
+        s = synthLeg(name, asset, weight)
         self.legs.append(s)
     
-    def calcPrice(self, action:str):
+    def calcPrice(self):
         self.bestBid = self.calcPriceForAction("SELL")
         self.bestOffer = self.calcPriceForAction("BUY")
     
