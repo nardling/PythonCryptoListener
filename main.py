@@ -4,6 +4,7 @@ from asset import exchAsset
 from synthAsset import synthAsset
 from streamer import streamer
 from coinbaseStreamer import coinbaseStreamer
+from strategy import strategy
 import threading
 
 app = Flask(__name__)
@@ -107,14 +108,18 @@ def ext_getLatestSynthPrice(userId: int, descr: str):
             "bestOffer" : synthAssets[descr].bestOffer,
             "offerSize" : 0
         }
-        print(res)
+        # print(res)
         return jsonify(res)
     else:
         return jsonify({})
-
-# @app.route("/registerStrategy/<userId>/<synthAsset>/<target>/<condition>/<value>/<action>/<maxExposure>/<maxTrade>/<timeDelay>", methods=["POST"])
-# def ext_registerStrategy(synthAsset: str, target: str, condition: str, value: str, action: str, maxExposure: float, maxTrade: float, timeDelay: int):
-    
+ 
+@app.route("/registerStrategy/<userId>/<synthAsset>/<target>/<condition>/<value>/<action>/<maxExposure>/<maxTrade>/<timeDelay>", methods=["POST"])
+def ext_registerStrategy(synthAsset: str, target: str, condition: str, value: str, action: str, maxExposure: float, maxTrade: float, timeDelay: int):
+    asset = synthAssets[synthAsset]
+    if asset is None:
+        return jsonify({})
+    strat = strategy(asset, target, condition, float(value), action)
+    asset.attachStrat(strat)
     
 def main():
     pass
