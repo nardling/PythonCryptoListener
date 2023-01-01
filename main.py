@@ -6,6 +6,9 @@ from streamer import streamer
 from coinbaseStreamer import coinbaseStreamer
 from strategy import strategy
 import threading
+from tradesServer import tradesServer
+import threading
+# import logging
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -14,6 +17,11 @@ binanceStreams = []
 coinbaseStream = None
 binanceAssets = {}
 synthAssets = {}
+strategies = {}
+serveinst = None
+tradeServer = tradesServer(5002)
+awaitingInit: bool
+# logging.basicConfig(filename='strategy.log', filemode='w')
 
 @app.route("/addAsset/<exch>/<asset>", methods=['POST'])
 def ext_addAsset(exch: str, asset: str):
@@ -24,7 +32,6 @@ def ext_addAsset(exch: str, asset: str):
 def int_addAsset(exch: str, asset: str):
     global coinbaseStream
     key = exch + ":" + asset
-    print ("In ext_addAsset for ", key)
     if exch == "BINANCE":
         if key not in binanceAssets:
             a = exchAsset(exch, asset, key)
@@ -33,10 +40,9 @@ def int_addAsset(exch: str, asset: str):
             t = threading.Thread(target=s.sock.run_forever)
             t.daemon = True
             t.start()
-            binanceStreams.append(s)
-            print ("Registered ", key)
-        else:
-            print("Asset already registered")
+            binanceStreams.append(s)            
+        # else:
+        #     print("Asset already registered")
     if exch == "COINBASE":
         if key not in binanceAssets:
             a = exchAsset(exch, asset, key)
@@ -96,12 +102,6 @@ def ext_registerSynthLeg(userId: int, synthDescr: str, exch: str, asset: str, we
 @app.route("/getLatestSynthPrice/<userId>/<descr>")
 def ext_getLatestSynthPrice(userId: int, descr: str):
     if descr in synthAssets:
-        # res = {
-        #     "bestBid" : synthAssets[descr].getPrice("SELL"),
-        #     "bidSize" : 0,
-        #     "bestOffer" : synthAssets[descr].getPrice("BUY"),
-        #     "offerSize" : 0
-        # }
         res = {
             "bestBid" : synthAssets[descr].bestBid,
             "bidSize" : 0,
@@ -113,16 +113,52 @@ def ext_getLatestSynthPrice(userId: int, descr: str):
     else:
         return jsonify({})
  
-@app.route("/registerStrategy/<userId>/<synthAsset>/<target>/<condition>/<value>/<action>/<maxExposure>/<maxTrade>/<timeDelay>", methods=["POST"])
-def ext_registerStrategy(synthAsset: str, target: str, condition: str, value: str, action: str, maxExposure: float, maxTrade: float, timeDelay: int):
+@app.route("/registerStrategy/<userId>/<synthAsset>/<target>/<condition>/<value>/<action>/<maxExposure>/<maxTrade>/<timeDelay>/<name>", methods=["POST"])
+def ext_registerStrategy(userId: int, synthAsset: str, target: str, condition: str, value: str, action: str, maxExposure: float, maxTrade: float, timeDelay: int, name: str):
+    if name in strategies:
+        return jsonify({})
     asset = synthAssets[synthAsset]
     if asset is None:
         return jsonify({})
-    strat = strategy(asset, target, condition, float(value), action)
+    strat = strategy(asset, target, condition, float(value), action, tradeServer)
+    strategies[name] = strat
     asset.attachStrat(strat)
+    return jsonify({})
+
+@app.route("/startStopStrategy/<userId>/<name>/<action>", methods=["POST"])
+def ext_start_stop_strat(userId: int, name: str, action: str):
+    if name in strategies:
+        if action == "START":
+            strategies[name].start()
+            return jsonify({"status": "Running"})
+        else:
+            strategies[name].stop()
+            return jsonify({"status": "Stopped"})
+    else:
+        return jsonify({"status": "NotFound"})
     
+@app.route("/getStrategyState/<userId>/<name>")
+def ext_getStrategyState(userId: int, name: str):
+    if name in strategies:
+        strat = strategies[name]
+        if strat.isRunning():
+            return jsonify({"isRegistered": True, "isRunning": True})
+        else:
+            return jsonify({"isRegistered": True, "isRunning": False})
+    else:
+        return jsonify({"isRegistered": False})
+
 def main():
     pass
 
+def init():
+    serveinst = threading.Thread(target=tradeServer.start, daemon=True)
+    if serveinst:
+        print("Starting Trades Server")
+        serveinst.start()
+    else:
+        print("Trades Server DID NOT START")
+
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', debug=True)
+    init()
+    app.run(host='0.0.0.0', debug=True, use_reloader=False)

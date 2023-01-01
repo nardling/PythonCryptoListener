@@ -24,6 +24,7 @@ class synthAsset:
         self.legs = []
         self.bestBid = 0
         self.bestOffer = 0
+        self.strategies = []
         
     def addLeg(self, name: str, asset: exchAsset, weight: float):
         s = synthLeg(name, asset, weight)
