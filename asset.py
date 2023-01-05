@@ -9,12 +9,14 @@ class exchAsset:
         self.offerSize = float(0)
         self.synthNames = set()
         self.synths = []
+        self.mdTime = 0
         
-    def updateTop(self, bb, bs, bo, os):
+    def updateTop(self, bb, bs, bo, os, ts):
         self.bestBid = bb
         self.bidSize = bs
         self.bestOffer = bo
         self.offerSize = os
+        self.mdTime = ts
         
     def updateSynths(self):
         for s in self.synths:
@@ -24,3 +26,6 @@ class exchAsset:
         if synthAsset.name not in self.synthNames:
             self.synthNames.add(synthAsset.name)
             self.synths.append(synthAsset)
+
+    def getState(self):
+        return str(self.bidSize) + "@" + str(self.bestBid) + " / " + str(self.offerSize) + "@" + str(self.bestOffer)

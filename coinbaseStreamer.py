@@ -1,5 +1,6 @@
 import websocket
 import json
+import time
 
 class coinbaseStreamer:
     def __init__(self, symbol, asset):
@@ -53,6 +54,7 @@ class coinbaseStreamer:
             sym = msgDict.get('product_id')
             if sym:
                 curAsset = self.symbols.get(sym)
-                curAsset.updateTop(msgDict['best_bid'], msgDict['best_bid_size'], msgDict['best_ask'], msgDict['best_ask_size'])
+                # msgDict['time']
+                curAsset.updateTop(msgDict['best_bid'], msgDict['best_bid_size'], msgDict['best_ask'], msgDict['best_ask_size'], time.time())
                 curAsset.updateSynths()
             quote=self.sock.recv()

@@ -19,6 +19,7 @@ class streamer:
         self.asset.bidSize = msgDict["B"]
         self.asset.bestOffer = msgDict["a"]
         self.asset.offerSize = msgDict["A"]
+        self.asset.ts = int(msgDict["E"] / 1000)
         self.asset.updateSynths()
 
     def onError(self, ws, error):

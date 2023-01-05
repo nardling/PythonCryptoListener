@@ -20,8 +20,6 @@ synthAssets = {}
 strategies = {}
 serveinst = None
 tradeServer = tradesServer(5002)
-awaitingInit: bool
-# logging.basicConfig(filename='strategy.log', filemode='w')
 
 @app.route("/addAsset/<exch>/<asset>", methods=['POST'])
 def ext_addAsset(exch: str, asset: str):
@@ -104,9 +102,9 @@ def ext_getLatestSynthPrice(userId: int, descr: str):
     if descr in synthAssets:
         res = {
             "bestBid" : synthAssets[descr].bestBid,
-            "bidSize" : 0,
+            "bidSize" : synthAssets[descr].bidSize,
             "bestOffer" : synthAssets[descr].bestOffer,
-            "offerSize" : 0
+            "offerSize" : synthAssets[descr].offerSize
         }
         # print(res)
         return jsonify(res)
@@ -117,10 +115,12 @@ def ext_getLatestSynthPrice(userId: int, descr: str):
 def ext_registerStrategy(userId: int, synthAsset: str, target: str, condition: str, value: str, action: str, maxExposure: float, maxTrade: float, timeDelay: int, name: str):
     if name in strategies:
         return jsonify({})
+    action = action.upper()
     asset = synthAssets[synthAsset]
+    condition = condition.upper()
     if asset is None:
         return jsonify({})
-    strat = strategy(asset, target, condition, float(value), action, tradeServer)
+    strat = strategy(asset, target, condition, float(value), action, tradeServer, name, float(timeDelay), maxTrade)
     strategies[name] = strat
     asset.attachStrat(strat)
     return jsonify({})
@@ -148,6 +148,13 @@ def ext_getStrategyState(userId: int, name: str):
     else:
         return jsonify({"isRegistered": False})
 
+@app.route("/modifyStrategyThreshold/<userId>/<name>/<newThreshold>")
+def ext_modifyStrategyThreshold(userId: int, name: str, newThreshold: float):
+    if name in strategies:
+        strategies[name].setThreshold(newThreshold)
+        return jsonify( {"valueChanged": True})
+    return jsonify( {"valueChanged": False})
+
 def main():
     pass
 
@@ -161,4 +168,4 @@ def init():
 
 if __name__ == "__main__":
     init()
-    app.run(host='0.0.0.0', debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', use_reloader=False)

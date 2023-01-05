@@ -13,17 +13,15 @@ class tradesServer:
         self.send(msg)
 
     def sendFunc(self, msg):
-        print("Trade Server Send ", msg)
         for s in self.sockets:
             self.sendLoop.run_until_complete(s.send(msg))
-        print("Sent")
 
     async def msgRecv(self, socket, path):
         while True:
             msg = await socket.recv()
             if msg == "subscribe":
                 self.sockets.add(socket)
-            print (msg)
+            print ("****************CLIENT SUBSCRIBED***************")
 
     def start(self):
         if (self.running):
@@ -32,9 +30,7 @@ class tradesServer:
         loop = asyncio.new_event_loop()
         loop.set_debug(True)
         asyncio.set_event_loop(loop)
-        print("Before Created Server")
         self.server = websockets.serve(self.msgRecv, "", self.port)
-        print("Created Server")
         # asyncio.get_event_loop().run_until_complete(self.server)
         # asyncio.get_event_loop().run_forever()
         loop.run_until_complete(self.server)
